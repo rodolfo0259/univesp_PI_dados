@@ -6,7 +6,7 @@ class GerarGraficos:
         pass
 
     def make_graph(df, graph_type, name, xlabel="", ylabel=""):
-        plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(12, 8))
         if graph_type == 'pie':
             df.plot(kind=graph_type, autopct='%1.1f%%') 
         else:
@@ -64,6 +64,19 @@ class GerarGraficos:
         df.loc[df["IDADE"] >= 80,'faixa_etaria'] = "80 ou mais"
         grouped = df.groupby("faixa_etaria")["index"].count()
         make_graph(grouped, graph_type="bar", name="vacinas_aplicadas_por_idade", xlabel="Idade (em anos)", ylabel="Quantida de vacinas aplicadas")
+
+    def grupo_atendimento(base_df):
+        grouped = base_df.groupby("GRUPO_ATENDIMENTO")["INDEX"].count()
+        grouped_others = grouped[grouped < 1000]
+        grouped['Outros'] = grouped_others.sum()
+        grouped = grouped.drop(grouped[grouped < 1000].index)
+        GerarGraficos.make_graph(
+            grouped, 
+            graph_type="pie", 
+            name="vacinas_aplicadas_por_grupo_de_atendimento", 
+            xlabel="Grupo de atendimento", 
+            ylabel="Quantida de vacinas aplicadas")
+
 
 class TratamentoExcel:
     def __init__(self):
@@ -139,14 +152,18 @@ class TratamentoExcel:
         return base_df
 
 if __name__ == "__main__":
-    filename = ""
-    sheetname = ""
-    base_df = pd.read_excel(filename, sheetname)
+    # filename = "arquivos/LISTA DE VACINADOS 21-22-23março.xlsx"
+    # sheetname = "TODOS"
+    # base_df = pd.read_excel(filename, sheetname)
 
-    base_df = TratamentoExcel.tratar_data_hora(base_df)
-    base_df = TratamentoExcel.padronizar_sexo(base_df)
-    base_df = TratamentoExcel.tratar_nulls_e_nome_dose(base_df)
-    base_df = TratamentoExcel.criar_faixa_etarias(base_df)
+    # base_df = TratamentoExcel.tratar_data_hora(base_df)
+    # base_df = TratamentoExcel.padronizar_sexo(base_df)
+    # base_df = TratamentoExcel.tratar_nulls_e_nome_dose(base_df)
+    # base_df = TratamentoExcel.criar_faixa_etarias(base_df)
 
-    base_df.to_csv("", sep=',', index=True, index_label="INDEX")
+    # base_df.to_csv("new_dados_vacinas_araras_tratados.csv", sep=',', index=True, index_label="INDEX")
+    import os
+    current_path = os.path.dirname(os.path.realpath(__file__))
+    base_df = pd.read_csv(f"{current_path}/arquivos/new_dados_vacinas_araras_tratados.csv", sep=',')
+    GerarGraficos.grupo_atendimento(base_df)
 
